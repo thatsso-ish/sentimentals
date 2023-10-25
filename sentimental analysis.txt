@@ -1,0 +1,99 @@
+import pandas as pd
+
+#loading dataset
+pdDF = pd.read_csv('C:/Users/UnpopularUser/Documents/Dataset-SA.csv', encoding = "ISO-8859-1")
+
+#viewing the head and columns
+pdDF.head()
+pdDF.columns
+
+#identifying duplicates
+dupliRowsDF = pdDF[pdDF.duplicated()]
+#viewing duplicates
+dupliRowsDF
+
+#dropping duplicates
+pdDF = pdDF.drop_duplicates(keep = False)
+
+pdDF
+
+#sorting ascending on rates
+pdDF = pdDF.sort_values (by = 'Rate', ascending = True)
+
+#change datatype to string
+pdDF = pdDF.astype(str)
+
+#removing special characters
+def encode_decode_ascii(x):
+    if isinstance(x, str):
+        return x.encode('utf-8').decode('ascii', 'ignore')
+    return x
+
+pdDF = pdDF.applymap(encode_decode_ascii)
+
+#dropping rows that contain text on price and rate columns
+pdDF['product_price'] = pd.to_numeric(pdDF['product_price'], errors='coerce')
+pdDF['Rate'] = pd.to_numeric(pdDF['Rate'], errors='coerce')
+pdDF = pdDF.dropna(subset=['product_price', 'Rate'], how='all')
+
+#removing whitespaces
+def remove_whitespace(s):
+    return ' '.join(s.split())
+
+pdDF['product_name'] = pdDF['product_name'].apply(remove_whitespace)
+#pdDF['product_price'] = pdDF['product_price'].apply(remove_whitespace)
+#pdDF['Rate'] = pdDF['Rate'].apply(remove_whitespace)
+pdDF['Review'] = pdDF['Review'].apply(remove_whitespace)
+pdDF['Summary'] = pdDF['Summary'].apply(remove_whitespace)
+pdDF['Sentiment'] = pdDF['Sentiment'].apply(remove_whitespace)
+
+#removing the ?????? on the product name
+pdDF['product_name'] = pdDF['product_name'].str.replace('?', '')
+
+pdDF
+
+#initcap
+def capitalize_if_string(text):
+    if isinstance(text, str):
+        return text.capitalize()
+    else:
+        return text
+
+
+pdDF['Review'] = pdDF['Review'].apply(capitalize_if_string)
+pdDF['Summary'] = pdDF['Summary'].apply(capitalize_if_string)
+pdDF['Sentiment'] = pdDF['Sentiment'].apply(capitalize_if_string)
+
+
+#left aligning the rows
+pdDF = pdDF.style.set_properties(**{'text-align': 'left'})
+
+import math
+
+#rounding off decimals
+pdDF['product_price'] = pdDF['product_price'].round(0)
+pdDF['Rate'] = pdDF['Rate'].round(0)
+
+pdDF
+
+import nltk
+
+#downloading the stopword package
+nltk.download('stopwords')
+
+from nltk.corpus import stopwords
+
+#creating a function for stopwords
+from nltk.corpus import stopwords
+
+def remove_stopwords(word_list):
+    processed_word_list = []
+    for word in word_list:
+        word = word.lower()
+        if word not in stopwords.words("english"):
+            processed_word_list.append(word)
+    return processed_word_list
+
+#calling the function
+pdDF['Stopwords_Review'] = pdDF['Review'].apply(lambda x: remove_stopwords(x.split()))
+pdDF['Stopwords_Summary'] = pdDF['Summary'].apply(lambda x: remove_stopwords(x.split()))
